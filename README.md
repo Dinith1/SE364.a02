@@ -3,6 +3,7 @@
 - 1.1 dijkstra_generalized() to return predecessors + distances
 - 1.1 Visualize least-cost path for network shown
 
+---
 
 - 1.2 forwarding() to produce forwarding table for a predecessor map
 - 1.2 Verify output
