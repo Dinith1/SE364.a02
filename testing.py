@@ -18,14 +18,14 @@ graph.add_nodes_from((
 graph.add_edges_from((
     # source-target-attributes
     (link['source'], link['target'], {'weight': link['cost']})
-    for link in netjson[    'links']))
+    for link in netjson['links']))
 
-# TEST task 1.1
+# =============================================================================
+#  TEST task 1.1
+# =============================================================================
 p, d = dijkstra_generalized(graph, 'u')
 print(p)
 print(d)
-
-
 
 node_positions = nx.get_node_attributes(graph, name='pos')
 
