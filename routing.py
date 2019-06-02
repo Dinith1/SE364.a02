@@ -1,34 +1,59 @@
 # -*- coding: utf-8 -*-
-import os
-import json
-import networkx as nx
-
-
-""" 
-Compute a forwarding table from a predecessor list. 
-"""
 def forwarding(predecessor, source):
-
+    """ 
+    Compute a forwarding table from a predecessor list. 
+    """
     pass  # TODO
 	
 
 
+def dijkstra_generalized(graph, source, weight='weight', infinity=None, plus=None, less=None, min=min):
+    """
+    Adapted from Lab 5: Least-cost or widest paths via Dijkstra's algorithm.
+    """
+    import math
 
-"""
-Least-cost or widest paths via Dijkstra's algorithm.
-"""	
-def dijkstra_generalized(graph, source, weight='weight', infinity=None, plus=None, less=None, min=None):
-    pred, dist = nx.dijkstra_predecessor_and_distance(graph, source)
-    return (pred, dist)
+    def c(x, y):
+        return graph[x][y][weight]
+    
+    u = source
+    N = frozenset(graph.nodes())
+    NPrime = {u} # i.e. "set([u])"
+    dist = dict.fromkeys(N, math.inf)
+    pred = dict.fromkeys(N, [])
+    
+    # Initialization
+    for v in N:
+        if graph.has_edge(u, v):
+                dist[v] = c(u, v)
+                pred[v] = [u]
+                
+    dist[u] = 0
+    # Loop and find shortest distances
+    while NPrime != N:
+        candidates = {w: dist[w] for w in N if w not in NPrime}
+        w, Dw = min(candidates.items(), key=lambda item: item[1]) # Get candidate with smallest distance
+        NPrime.add(w)
+        for v in graph[w]:
+            if v not in NPrime:
+                DvNew = dist[w] + c(w, v)
+                if DvNew < dist[v]:
+                    dist[v] = DvNew
+                    pred[v] = [w]
+    
+    return (dist, pred)
 
 
 
-
-"""
-Visualize the least-cost path tree for the given graph in task 1.1
-"""
 def task1_visualize_tree():
-    filename = os.path.join('.', 'task1.1.json')  # modify as required
+    """
+    Visualize the least-cost path tree for the given graph in task 1.1
+    """
+    import os
+    import json
+    import networkx as nx
+    
+    filename = os.path.join('.', 'task1.1.json')
     netjson = json.load(open(filename))
     
     graph = nx.Graph()
@@ -42,7 +67,7 @@ def task1_visualize_tree():
         (link['source'], link['target'], {'weight': link['cost']})
         for link in netjson['links']))
     
-    pred, dist = dijkstra_generalized(graph, 'u')
+    dist, pred = dijkstra_generalized(graph, 'u')
 
     tree = nx.Graph()
 
@@ -51,9 +76,8 @@ def task1_visualize_tree():
         for node in netjson['nodes']))
     
     tree.add_edges_from((
-        # source-target-attributes
         (k, v[0], {'weight': dist[k]-dist[v[0]]})
-        for k, v in pred))
+        for k, v in pred.items() if v))
 
     node_positions = nx.get_node_attributes(tree, name='pos')
     
@@ -61,9 +85,11 @@ def task1_visualize_tree():
         node_labels=nx.get_node_attributes(tree, name='name'), 
         edge_labels=nx.get_edge_attributes(tree, name='weight'))
     
-    nx.draw_networkx(p, pos=node_positions)
+    nx.draw_networkx(tree, pos=node_positions)
 
 
 
-
+'''
+main
+'''
 task1_visualize_tree()

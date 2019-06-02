@@ -52,52 +52,52 @@
         {
             "source": "u",
             "target": "v",
-            "cost": 7
+            "weight": 7
         },
         {
             "source": "u",
             "target": "w",
-            "cost": 3
+            "weight": 3
         },
         {
             "source": "u",
             "target": "x",
-            "cost": 5
+            "weight": 5
         },
         {
             "source": "v",
             "target": "w",
-            "cost": 3
+            "weight": 3
         },
         {
             "source": "v",
             "target": "y",
-            "cost": 4
+            "weight": 4
         },
         {
             "source": "w",
             "target": "x",
-            "cost": 4
+            "weight": 4
         },
         {
             "source": "w",
             "target": "y",
-            "cost": 8
+            "weight": 8
         },
         {
             "source": "x",
             "target": "y",
-            "cost": 7
+            "weight": 7
         },
         {
             "source": "x",
             "target": "z",
-            "cost": 9
+            "weight": 9
         },
         {
             "source": "y",
             "target": "z",
-            "cost": 2
+            "weight": 2
         }
     ]
 }
