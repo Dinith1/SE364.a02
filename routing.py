@@ -1,15 +1,8 @@
 # -*- coding: utf-8 -*-
-def forwarding(predecessor, source):
-    """ 
-    Compute a forwarding table from a predecessor list. 
-    """
-    pass  # TODO
-	
-
-
 def dijkstra_generalized(graph, source, weight='weight', infinity=None, plus=None, less=None, min=min):
     """
     Adapted from Lab 5: Least-cost or widest paths via Dijkstra's algorithm.
+    Returns (distances, predecessors) in that order.
     """
     import math
 
@@ -87,6 +80,16 @@ def task1_visualize_tree():
     
     nx.draw_networkx(tree, pos=node_positions)
 
+
+
+def forwarding(predecessor, source):
+    """ 
+    Compute a forwarding table from a predecessor list. 
+    """
+    table = {}
+    for node, pre in predecessor.items():
+        
+    
 
 
 '''
