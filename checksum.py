@@ -26,5 +26,4 @@ def internet_checksum(data, total=0x0):
         if (len(bin(sum)) > 18):
             sum += 1 # Carry out bit must be 1 if it exists
             
-#    return int(hextet_complement(sum), 2)
-    return hextet_complement(sum)
+    return int(hextet_complement(sum), 2)

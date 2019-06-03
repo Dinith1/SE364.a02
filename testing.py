@@ -46,10 +46,28 @@ graph.add_edges_from((
 # =============================================================================
 #  TEST task 2.1
 # =============================================================================
-print(hextet_complement(45))
-data = bytearray(b'\x00\x01\xf2\x03\xf4\xf5\xf6\xf7')
-cs = internet_checksum(data)
-print(cs)
+#print(hextet_complement(45))
+#data = bytearray(b'\x00\x01\xf2\x03\xf4\xf5\xf6\xf7')
+#cs = internet_checksum(data)
+#print(cs)
+
+
+# =============================================================================
+#  TEST task 2.2
+# =============================================================================
+#g = bitarray('1001')           
+#d = bitarray('101110000')         
+#
+#def xor_at(a, b, offset=0):
+#    for k, bk in enumerate(b):
+#        index = offset + k
+#        a[index] = a[index] ^ bk
+#
+#xor_at(d, g)
+#print(g)
+#print(d)            
+
+
 
 
 

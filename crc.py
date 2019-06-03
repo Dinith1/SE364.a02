@@ -15,10 +15,21 @@ def crc(d, g):
     '''
     dcopy = d.copy()
     
+    i = 0
+    # Skip all leading 0s
+    while not dcopy[i]:
+        i += 1
+    
+    # Perform 'long division' (XOR-ing)
+    while i + len(g) <= len(dcopy):
+        xor_at(dcopy, g, i)
+        # Get first resulting 1
+        while i != len(dcopy) and not dcopy[i]:
+            i += 1
 	
-	# TODO: compute and return remainder "r"
-	
-    return
+    # Return only the last len(g)-1 bits (i.e. the remainder)
+    return dcopy[len(dcopy)-len(g)+1:]
+
 
 
 
