@@ -4,61 +4,47 @@ import sys
 import socket
 import struct
 import time
-
 import collections
 from checksum import internet_checksum
 
+
 assert 3 <= sys.version_info[0], 'Requires Python 3'
 
-# For readability in time conversions
-MILLISEC_PER_SEC = 1000.0
 
-# Selects the right-most 16 bits
-RIGHT_HEXTET = 0xffff
-
-# Size in bits of buffer in which socket data is received
-BUFFER_SIZE = 2 << 5
-
-# A port number is required for socket.socket, even through port
-# numbers are unused by ICMP. We use a legal (i.e. strictly positive)
-# port number, just to be safe.
-ICMP_PORT_PLACEHOLDER = 1
+MILLISEC_PER_SEC = 1000.0 # For readability in time conversions
+RIGHT_HEXTET = 0xffff # Selects the right-most 16 bits
+BUFFER_SIZE = 2 << 5 # Size in bits of buffer in which socket data is received
+ICMP_PORT_PLACEHOLDER = 1 # Port number required for socket.socket, though unused by ICMP
 ICMP_HEADER_LENGTH = 28
 ICMP_STRUCT_FIELDS = "BBHHH"  # for use with struct.pack/unpack
 
 
-#
-# TODO: Define ChecksumError class
-#
+class TimeoutError(Exception):
+    pass
 
 
-# Note that TimeoutError already exists in the Standard Library
-#class TimeoutError(PingError):
-#    pass
+class ChecksumError(Exception):
+    pass
 
 
-# See IETF RFC 792: https://tools.ietf.org/html/rfc792
-# NB: The order of the fields *is* significant
-ICMPMessage = collections.namedtuple('ICMPMessage',
-                                  ['type', 'code', 'checksum',
-                                   'identifier', 'sequence_number'])
-# For ICMP type field:
-# See https://en.wikipedia.org/wiki/Internet_Control_Message_Protocol
-#     http://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml
+# Named tuple for ICMP Messages
+ICMPMessage = collections.namedtuple('ICMPMessage', ['type', 'code', 'checksum', 'identifier', 'sequence_number'])
+# For ICMP type field
 ICMPTypeCode = collections.namedtuple('ICMPTypeCode', ['type', 'code'])
+
 ECHO_REQUEST = ICMPTypeCode(8, 0)
 ECHO_REPLY = ICMPTypeCode(0, 0)
 
 
+
 def this_instant():
-	# TODO: Decide which of the following values to return here:
-	# time.clock(), time.perf_counter(), time.process_time()
-    return None
+    return time.perf_counter()
+
 
 
 def ping(client_socket, dest_host, client_id, seq_no=0):
     """
-   Sends echo request, receives response, and returns RTT.
+    Sends echo request, receives response, and returns RTT.
     """
 
     def icmp_header(host_checksum):
@@ -69,6 +55,7 @@ def ping(client_socket, dest_host, client_id, seq_no=0):
                     identifier=client_id,
                     sequence_number=seq_no)
         return struct.pack(ICMP_STRUCT_FIELDS, *message)
+
 
 	# TODO: Please study these lines carefully,
 	#       noting that "icmp_pack()" (defined above) is called *twice*
@@ -117,7 +104,10 @@ def ping(client_socket, dest_host, client_id, seq_no=0):
     # 4. len() of ICMP response payload is struct.calcsize('d')
     #
 
-def verbose_ping(host, timeout=2.0, count=4, log=print):
+
+
+
+def verbose_ping(host, timeout, count, log=print):
     """
     Send ping and print session details to command prompt.
     """
@@ -129,49 +119,33 @@ def verbose_ping(host, timeout=2.0, count=4, log=print):
         log('Please check name and try again.')
         return
 
-    #
-	# TODO: Print suitable heading
-	#       e.g. log("Contacting {} with {} bytes of data ".format(...))
-    #
+    
+    log("Pinging {} [{}] with {} bytes of data ".format(host, host_ip, 32))
+    
 
     round_trip_times = []
 
     for seq_no in range(count):
         try:
-            #
-			# TODO: Open socket using "with" statement
-			#
-			# TODO: set time-out duration (in seconds) on socket
-			#
-
-                # "The Identifier and Sequence Number can be used by the
-                # client to match the reply with the request that caused the
-                # reply. In practice, most Linux systems use a unique
-                # identifier for every ping process, and sequence number is
-                # an increasing number within that process. Windows uses a
-                # fixed identifier, which varies between Windows versions,
-                # and a sequence number that is only reset at boot time."
-                # -- https://en.wikipedia.org/wiki/Ping_(networking_utility)
+            with socket.socket(family=socket.AF_INET, 
+                               type=socket.SOCK_RAW, 
+                               proto=socket.getprotobyname("icmp")) as sock:
+                sock.settimeout(timeout/MILLISEC_PER_SEC)
                 client_id = os.getpid() & RIGHT_HEXTET
-
-                delay, response = ping(client_socket,
-                                   host,
-                                   client_id=client_id,
-                                   seq_no=seq_no)
+                delay, response = ping(sock, host, client_id=client_id, seq_no=seq_no)
 
             log("Reply from {:s} in {}ms: {}".format(host_ip, delay, response))
 
-			#
-            # TODO: Append "delay" to round_trip_times
-			#
-
-		# TODO:
-        # catch time-out error:
-        #     handle time-out error i.e. log(...)
-
-		# TODO:
-        # catch check-sum error
-        #     handle checksum-error i.e. log(...)
+            round_trip_times.append(delay)
+            
+            
+        except TimeoutError as error:
+    		# TODO: catch time-out error:
+            #     handle time-out error i.e. log(...)
+    
+        except ChecksumError as error:
+            # TODO: catch check-sum error
+            #     handle checksum-error i.e. log(...)
 
         except OSError as error:
             log("OS error: {}. Please check name.".format(error.strerror))
@@ -195,25 +169,29 @@ def verbose_ping(host, timeout=2.0, count=4, log=print):
 	#
 
 
+
+
+
+
 if __name__ == '__main__':
 
     import argparse
     parser = argparse.ArgumentParser(description='Test a host.')
     parser.add_argument('-w', '--timeout',
-                        metavar=None,  # TODO: Specify this argument
+                        metavar='timeout',
                         type=int,
-                        default=None,  # TODO: Specify this argument
+                        default=1000,
                         help='Timeout to wait for each reply (milliseconds).')
     parser.add_argument('-c', '--count',
                         metavar='num',
-                        type=None,  # TODO: Specify this argument
+                        type=int,
                         default=4,
-                        help=None)  # TODO: Specify this argument
+                        help='Number of echo requests to send')
     parser.add_argument('hosts',
                         metavar='host',
                         type=str,
                         nargs='+',
-                        help=None)  # TODO: Specify this argument
+                        help='URL or IPv4 address of target host(s)')
     args = parser.parse_args()
 
     for host in args.hosts:

@@ -3,8 +3,8 @@ import os
 import json
 import networkx as nx
 #from routing import dijkstra_generalized, forwarding
-from checksum import hextet_complement, internet_checksum
-from pprint import pprint
+#from checksum import hextet_complement, internet_checksum
+#from pprint import pprint
 
 
 filename = os.path.join('.', 'task1.1.json')  # modify as required
@@ -31,7 +31,7 @@ graph.add_edges_from((
 #
 #table = forwarding(p, 'u')
 #print("\n\n")
-#pprint(table)6
+#pprint(table)
 
 #node_positions = nx.get_node_attributes(graph, name='pos')
 #
@@ -67,6 +67,10 @@ graph.add_edges_from((
 #print(g)
 #print(d)            
 
+
+# =============================================================================
+#  TEST task 3
+# =============================================================================
 
 
 
