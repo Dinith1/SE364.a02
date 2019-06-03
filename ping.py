@@ -58,52 +58,47 @@ def ping(client_socket, dest_host, client_id, seq_no=0):
 
     icmp_payload = struct.pack('d', this_instant())  # double-precision float
     icmp_packet_without_checksum = icmp_header(0) + icmp_payload
+    print("----------",icmp_packet_without_checksum)
     checksum = internet_checksum(icmp_packet_without_checksum)
+    print("..........", hex(checksum))
     icmp_packet = icmp_header(checksum) + icmp_payload
 
 
     # Get the host name (unchanged if already in IPv4 address format)
     dest_host = socket.gethostbyname(dest_host)
 
-	# TODO: .
-	# 1. Call sendto() on socket to send packet to destination host
+	# Send packet to destination host
     client_socket.sendto(icmp_packet, (dest_host, ICMP_PORT_PLACEHOLDER))
-    # 2. Call recvfrom() on socket to receive datagram
-	#    (Note: A time-out exception might be raised here).
-    # 2. Store this_instant() at which datagram was received
+    
+    # Try to get response
     try:
         datagram = client_socket.recvfrom(BUFFER_SIZE)
         time_recv = this_instant()
     except socket.timeout:
         raise TimeoutError()
         
-	# 3. Extract ICMP packet from datagram i.e. drop IP header (20 bytes)
-	#     e.g. "icmp_packet = datagram[20:]"
+	# Extract ICMP packet from datagram (drop IP Header)
     icmp_packet_recv = datagram[IP_HEADER_LENGTH:]
-	# 4. Compute checksum on ICMP response packet (header and payload);
-	#     this will hopefully come to zero
+    
+	# Compute checksum on ICMP response packet (header and payload)
     checksum_recv = internet_checksum(icmp_packet_recv)
-    # 5. Raise exception if checksum is nonzero
     if not checksum_recv:
         raise ChecksumError()
     
-	# 6. Extract ICMP response header from ICMP packet (8 bytes) and
-	#     unpack binary response data to obtain ICMPMessage "response"
-	#     that we'll return with the round-trip time (Step 9, below);
-	#     notice that this namedstruct is printed in the sample
-	#     command line output given in the assignment description.
-	#     e.g. "Reply from 151.101.0.223 in 5ms: ICMPMessage(type=0, code=0, checksum=48791, identifier=33540, sequence_number=0)"
+	# Extract ICMP response header from ICMP packet (8 bytes) and unpack
     icmp_recv_header = icmp_packet_recv[0:ICMP_HEADER_LENGTH]
     recv_header = ICMPMessage(*struct.unpack(ICMP_STRUCT_FIELDS, icmp_recv_header))
-	# 7. Extract ICMP response payload (remaining bytes) and unpack
-	#     binary data to recover "time sent"
+    
+	# Extract ICMP response payload (remaining bytes) and unpack
     icmp_recv_payolad = icmp_packet_recv[ICMP_HEADER_LENGTH:]
     time_sent = struct.unpack('d', icmp_recv_payolad)
-	# 8. Compute round-trip time from "time sent"
+    
+	# Compute round-trip time from "time sent"
     rtt = time_recv - time_sent
-	# 9. Return "(round-trip time in milliseconds, response)"
+    
     return (rtt, recv_header)
-	#
+	
+
     # If things go wrong
     # ==================
     # You might like to check ("assert") that:
@@ -128,7 +123,8 @@ def verbose_ping(host, timeout, count, log=print):
         return
 
     
-    log("Pinging {} [{}] with {} bytes of data ".format(host, host_ip, 36))
+    log("Pinging {} [{}] with {} bytes of data "
+        .format(host, host_ip, IP_HEADER_LENGTH + ICMP_HEADER_LENGTH + struct.calcsize('d')))
     
     round_trip_times = []
 
