@@ -67,14 +67,14 @@ def ping(client_socket, dest_host, client_id, seq_no=0):
 
 	# TODO: .
 	# 1. Call sendto() on socket to send packet to destination host
-    client_socket.sendto(icmp_packet, dest_host)
+    client_socket.sendto(icmp_packet, (dest_host, ICMP_PORT_PLACEHOLDER))
     # 2. Call recvfrom() on socket to receive datagram
 	#    (Note: A time-out exception might be raised here).
     # 2. Store this_instant() at which datagram was received
     try:
         datagram = client_socket.recvfrom(BUFFER_SIZE)
         time_recv = this_instant()
-    except timeout:
+    except socket.timeout:
         raise TimeoutError()
         
 	# 3. Extract ICMP packet from datagram i.e. drop IP header (20 bytes)
@@ -84,7 +84,7 @@ def ping(client_socket, dest_host, client_id, seq_no=0):
 	#     this will hopefully come to zero
     checksum_recv = internet_checksum(icmp_packet_recv)
     # 5. Raise exception if checksum is nonzero
-    if not checksum:
+    if not checksum_recv:
         raise ChecksumError()
     
 	# 6. Extract ICMP response header from ICMP packet (8 bytes) and
@@ -98,9 +98,11 @@ def ping(client_socket, dest_host, client_id, seq_no=0):
 	# 7. Extract ICMP response payload (remaining bytes) and unpack
 	#     binary data to recover "time sent"
     icmp_recv_payolad = icmp_packet_recv[ICMP_HEADER_LENGTH:]
-    recv_payload = ICMPMessage(*struct.unpack(ICMP_STRUCT_FIELDS, ))
+    time_sent = struct.unpack('d', icmp_recv_payolad)
 	# 8. Compute round-trip time from "time sent"
+    rtt = time_recv - time_sent
 	# 9. Return "(round-trip time in milliseconds, response)"
+    return (rtt, recv_header)
 	#
     # If things go wrong
     # ==================
@@ -126,7 +128,7 @@ def verbose_ping(host, timeout, count, log=print):
         return
 
     
-    log("Pinging {} [{}] with {} bytes of data ".format(host, host_ip, 32))
+    log("Pinging {} [{}] with {} bytes of data ".format(host, host_ip, 36))
     
     round_trip_times = []
 
@@ -144,11 +146,10 @@ def verbose_ping(host, timeout, count, log=print):
             
             
         except TimeoutError:
-            log('Request timed out after {}ms'.format(timeout))
+            log("Request timed out after {}ms".format(timeout))
     
-        except ChecksumError as error:
-            # TODO: catch check-sum error
-            #     handle checksum-error i.e. log(...)
+        except ChecksumError:
+            log("Message has been corrupted (checksum incorrect)")
 
         except OSError as error:
             log("OS error: {}. Please check name.".format(error.strerror))
@@ -159,18 +160,25 @@ def verbose_ping(host, timeout, count, log=print):
                     " only be sent from processes running as root.")
             break
 
-	#
-	# TODO: Print packet statistics header
-	# TODO: Compute & print packet statistics
-	#       i.e. "how many packets received and lost?"
-	#
 
-	#
-    # TODO: "if received more than 0 packets":
-	#    TODO: Compute & print statistics on round-trip times
-	#          i.e. Minimum, Maximum, Average
-	#
+    num_sent = count
+    num_recv = len(round_trip_times)
+    num_lost = num_sent - num_recv
+    rtts = round_trip_times
+    
+    
+	# TODO: Compute & print packet statistics (number of packets received/lost)   
+    log("Ping statistics for {}".format(host_ip))
+    log("\tPackts: Sent = {}, Received = {}, Lost = {} ({}% loss)"
+        .format(num_sent, num_recv, num_lost, (num_lost/num_sent)*100))
 
+
+	# Compute & print statistics on round-trip times (Minimum, Maximum, Average)
+    if num_recv > 0:
+        log("Approximate round trip times in milli-seconds:")
+        log("\tMinimum = {}, Maximimum = {}, Average = {}"
+            .format(min(rtts), max(rtts), sum(rtts)/len(rtts)))
+        
 
 
 
