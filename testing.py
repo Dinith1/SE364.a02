@@ -2,10 +2,11 @@
 import os
 import json
 import networkx as nx
-from routing import dijkstra_generalized
+from routing import dijkstra_generalized, forwarding
+from pprint import pprint
 
 
-filename = os.path.join('.', 'KuroseRoss5-15.json')  # modify as required
+filename = os.path.join('.', 'task1.1.json')  # modify as required
 netjson = json.load(open(filename))
 
 # graph = nx.DiGraph()
@@ -26,6 +27,10 @@ graph.add_edges_from((
 d, p = dijkstra_generalized(graph, 'u')
 print(d)
 print(p)
+
+table = forwarding(p, 'u')
+print("\n\n")
+pprint(table)
 
 #node_positions = nx.get_node_attributes(graph, name='pos')
 #

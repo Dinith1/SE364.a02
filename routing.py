@@ -57,7 +57,7 @@ def task1_visualize_tree():
     
     graph.add_edges_from((
         # source-target-attributes
-        (link['source'], link['target'], {'weight': link['cost']})
+        (link['source'], link['target'], {'weight': link['weight']})
         for link in netjson['links']))
     
     dist, pred = dijkstra_generalized(graph, 'u')
@@ -86,10 +86,24 @@ def forwarding(predecessor, source):
     """ 
     Compute a forwarding table from a predecessor list. 
     """
-    table = {}
-    for node, pre in predecessor.items():
-        
+    table = {k: [] for k in predecessor.keys()}
+    table.pop(source, None)
     
+    for node, pre in predecessor.items():
+        if node != source:
+            for v in pre:
+                if v == source:
+                    if (source, node) not in table[node]:
+                        table[node].append((source, node))
+                else:
+                    while (source not in predecessor[v]):
+                        v = predecessor[v][0]
+                    
+                    if ((source, v) != (source, source) and (source, v) not in table[node]):
+                        table[node].append((source, v))
+         
+    return table         
+                
 
 
 '''
