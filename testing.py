@@ -2,7 +2,8 @@
 import os
 import json
 import networkx as nx
-from routing import dijkstra_generalized, forwarding
+#from routing import dijkstra_generalized, forwarding
+from checksum import hextet_complement
 from pprint import pprint
 
 
@@ -22,15 +23,15 @@ graph.add_edges_from((
     for link in netjson['links']))
 
 # =============================================================================
-#  TEST task 1.1
+#  TEST task 1.1 and 1.2
 # =============================================================================
-d, p = dijkstra_generalized(graph, 'u')
-print(d)
-print(p)
-
-table = forwarding(p, 'u')
-print("\n\n")
-pprint(table)
+#d, p = dijkstra_generalized(graph, 'u')
+#print(d)
+#print(p)
+#
+#table = forwarding(p, 'u')
+#print("\n\n")
+#pprint(table)
 
 #node_positions = nx.get_node_attributes(graph, name='pos')
 #
@@ -41,6 +42,11 @@ pprint(table)
 #nx.draw_networkx(graph, pos=node_positions)
 
 
+
+# =============================================================================
+#  TEST task 2.1
+# =============================================================================
+print(hextet_complement(45))
 
 
 

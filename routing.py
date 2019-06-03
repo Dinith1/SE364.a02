@@ -84,7 +84,9 @@ def task1_visualize_tree():
 
 def forwarding(predecessor, source):
     """ 
-    Compute a forwarding table from a predecessor list. 
+    Compute a forwarding table from a predecessor list. If there are multiple
+    shortest paths with differring inital edges, both edges are added to the
+    table.
     """
     table = {k: [] for k in predecessor.keys()}
     table.pop(source, None)

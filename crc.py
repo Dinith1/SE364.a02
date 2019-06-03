@@ -6,12 +6,20 @@ def xor_at(a, b, offset=0):
         index = offset + k
         a[index] = a[index] ^ bk
 
+
+
 def crc(d, g):
-	# We'd prefer not to modify the argument in xor_at
-    dcopy = d.copy()  
-	#
+    '''
+    Compute and return the remainder of long division of d/g.
+    Assume padding had already been added to d.
+    '''
+    dcopy = d.copy()
+    
+	
 	# TODO: compute and return remainder "r"
-	#
+	
+    return
+
 
 
 if __name__ == '__main__':
