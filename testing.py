@@ -3,7 +3,7 @@ import os
 import json
 import networkx as nx
 #from routing import dijkstra_generalized, forwarding
-from checksum import hextet_complement
+from checksum import hextet_complement, internet_checksum
 from pprint import pprint
 
 
@@ -31,7 +31,7 @@ graph.add_edges_from((
 #
 #table = forwarding(p, 'u')
 #print("\n\n")
-#pprint(table)
+#pprint(table)6
 
 #node_positions = nx.get_node_attributes(graph, name='pos')
 #
@@ -47,7 +47,9 @@ graph.add_edges_from((
 #  TEST task 2.1
 # =============================================================================
 print(hextet_complement(45))
-
+data = bytearray(b'\x00\x01\xf2\x03\xf4\xf5\xf6\xf7')
+cs = internet_checksum(data)
+print(cs)
 
 
 
