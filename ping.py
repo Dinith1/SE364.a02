@@ -58,10 +58,12 @@ def ping(client_socket, dest_host, client_id, seq_no=0):
 
     icmp_payload = struct.pack('d', this_instant())  # double-precision float
     icmp_packet_without_checksum = icmp_header(0) + icmp_payload
-    print("----------",icmp_packet_without_checksum)
     checksum = internet_checksum(icmp_packet_without_checksum)
-    print("..........", hex(checksum))
-    icmp_packet = icmp_header(checksum) + icmp_payload
+    checksum_string = hex(checksum)
+    checksum_string_reversed = checksum_string[4:] + checksum_string[2:4]
+    checksum_int_reversed = int(checksum_string_reversed, 16)
+    
+    icmp_packet = icmp_header(checksum_int_reversed) + icmp_payload
 
 
     # Get the host name (unchanged if already in IPv4 address format)
@@ -71,30 +73,27 @@ def ping(client_socket, dest_host, client_id, seq_no=0):
     client_socket.sendto(icmp_packet, (dest_host, ICMP_PORT_PLACEHOLDER))
     
     # Try to get response
-    try:
-        datagram = client_socket.recvfrom(BUFFER_SIZE)
-        time_recv = this_instant()
-    except socket.timeout:
-        raise TimeoutError()
+    datagram, addr = client_socket.recvfrom(BUFFER_SIZE)
+    time_recv = this_instant()
         
 	# Extract ICMP packet from datagram (drop IP Header)
     icmp_packet_recv = datagram[IP_HEADER_LENGTH:]
     
 	# Compute checksum on ICMP response packet (header and payload)
     checksum_recv = internet_checksum(icmp_packet_recv)
-    if not checksum_recv:
+    if checksum_recv != 0:
         raise ChecksumError()
     
 	# Extract ICMP response header from ICMP packet (8 bytes) and unpack
     icmp_recv_header = icmp_packet_recv[0:ICMP_HEADER_LENGTH]
-    recv_header = ICMPMessage(*struct.unpack(ICMP_STRUCT_FIELDS, icmp_recv_header))
+    recv_header = struct.unpack(ICMP_STRUCT_FIELDS, icmp_recv_header)
     
 	# Extract ICMP response payload (remaining bytes) and unpack
     icmp_recv_payolad = icmp_packet_recv[ICMP_HEADER_LENGTH:]
-    time_sent = struct.unpack('d', icmp_recv_payolad)
+    time_sent = struct.unpack('d', icmp_recv_payolad)[0]
     
 	# Compute round-trip time from "time sent"
-    rtt = time_recv - time_sent
+    rtt = (time_recv - time_sent) * MILLISEC_PER_SEC
     
     return (rtt, recv_header)
 	
@@ -141,7 +140,7 @@ def verbose_ping(host, timeout, count, log=print):
             round_trip_times.append(delay)
             
             
-        except TimeoutError:
+        except socket.timeout:
             log("Request timed out after {}ms".format(timeout))
     
         except ChecksumError:
