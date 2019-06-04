@@ -8,24 +8,6 @@ def hextet_complement(x):
     return bin(~x & mask)
 
 
-
-#def internet_checksum(data, total=0x0):
-#    '''
-#    Internet Checksum of a bytes array. Returns an integer version of the checksum.
-#    '''    
-#    toSum = []
-#    # Convert data to 16-bit sequences
-#    for i in range(0, len(data), 2):
-#        toSum.append(bin((data[i]<<8) + data[i+1]))
-#
-#    # Add 16-bit sequences
-#    sum = 0
-#    for b in toSum:
-#        sum += int(b, 2)
-#        if (len(bin(sum)) > 18):
-#            sum += 1 # Carry out bit must be 1 if it exists
-#            
-#    return int(hextet_complement(sum), 2)
     
 def internet_checksum(data, total=0x0):
     '''
@@ -35,12 +17,16 @@ def internet_checksum(data, total=0x0):
     # Convert data to 16-bit sequences
     for i in range(0, len(data), 2):
         toSum.append(bin((data[i]<<8) + data[i+1]))
-
+    
+    # Handle odd number of bytes in data (one extra byte on the end)
+    if i + 1 == len(data):
+        toSum.append(bin(data[i]<<8))
+    
     # Add 16-bit sequences
-    sum = 0
     for b in toSum:
-        sum += int(b, 2)
-        if (len(bin(sum)) > 65535):
-            sum -= 65535
+        total += int(b, 2)
+        # Wrap around carry bit
+        if (total > 65535):
+            total -= 65535
             
-    return int(hextet_complement(sum), 2)
+    return int(hextet_complement(total), 2)
